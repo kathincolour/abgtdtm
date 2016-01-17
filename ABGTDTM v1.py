@@ -11,8 +11,9 @@ def save_game():
 def main_menu():
     print('wip')
 
-def level_1():
-    layout = [] # the layout of the level in a string
+    platforms = [] # array containing the platforms of the level
+    enemies = [] # array containing the enemies of the level
+    power_ups = [] # array containing the power ups of the level
     time_enabled = False # is this level timed
 
 def main():
@@ -68,7 +69,7 @@ def main():
     wall_list.add(wall_right)
     all_sprites.add(wall_right)
 
-
+    
     while not done:
         
         for event in pygame.event.get():
