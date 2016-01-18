@@ -18,6 +18,7 @@ objects
 - power ups
 '''
 import pygame
+from ABGTDTM import *
 
         
         
@@ -50,8 +51,25 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         # move left or right
         self.rect.x += self.change_x
+        
+        #check for wall collision
+        object_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
+        for object in object_hit_list:
+            if self.change_x > 0: # player is moving right because it is positive
+                self.rect.right = object.rect.left # Change player right side to equal object left side
+            else: # player is moving left
+                self.rect.left = block.rect.right
+        
         # move up or down
         self.rect.y += self.change_y
+        
+        object_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
+        for object in object_hit_list:
+            if self.change_y > 0: # player is moving down because it is positive
+                self.rect.bottom = object.rect.top # Change player bottom side to equal object top side
+            else: # player is moving up
+                self.rect.top = block.rect.bottom
+        
         
         
 
