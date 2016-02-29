@@ -26,7 +26,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = pygame.image.load("test_sprite.png").convert()
+        self.image = pygame.image.load("assets/test_sprite.png").convert()
 
         self.rect = self.image.get_rect()
         self.rect.y = y
@@ -48,22 +48,22 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.change_x
 
         # check for wall collision
-        object_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
-        for object in object_hit_list:
+        entity_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
+        for entity in entity_hit_list:
             if self.change_x > 0:  # player is moving right because it is positive
-                self.rect.right = object.rect.left  # Change player right side to equal object left side
+                self.rect.right = entity.rect.left  # Change player right side to equal object left side
             else:  # player is moving left
-                self.rect.left = object.rect.right
+                self.rect.left = entity.rect.right
 
         # move up or down
         self.rect.y += self.change_y
 
-        object_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
-        for object in object_hit_list:
+        entity_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
+        for entity in entity_hit_list:
             if self.change_y > 0:  # player is moving down because it is positive
-                self.rect.bottom = object.rect.top  # Change player bottom side to equal object top side
+                self.rect.bottom = entity.rect.top  # Change player bottom side to equal object top side
             else:  # player is moving up
-                self.rect.top = object.rect.bottom
+                self.rect.top = entity.rect.bottom
 
 
 class Wall(pygame.sprite.Sprite):
@@ -81,16 +81,22 @@ class Wall(pygame.sprite.Sprite):
         wall_list.add(self)
         all_sprites.add(self)
 
-
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        
 class Level():
     """ super class used to define each level """
 
     def __init__(self):
-        self.platforms = []  # array containing the platforms of the level
+        self.platforms = []  # array containing the platform co-ordinates of the level
         self.enemies = []  # array containing the enemies of the level
         self.power_ups = []  # array containing the power ups of the level
         self.time_enabled = False  # is this level timed
         self.level_height = SCREENHEIGHT * 3  # temporary multiplier
+    
+    def draw(self):
+        print('wip')
 
     def move_level(self):  # Check if player has reached edge of top screen
         if player.rect.top <= SCREENHEIGHT - 2:
@@ -104,8 +110,10 @@ class Level():
             # level number + 1
             # generate new level
 
-wall_list = pygame.sprite.Group()
-# create all sprite group and player instance
+# create all sprite groups and player instance
 all_sprites = pygame.sprite.Group()
+all_level_sprites = pygame.sprite.Group() # Sprites that move with the level (shouldn't inlcude walls)
 player = Player(500, 400)
 all_sprites.add(player)
+all_level_sprites.add(player)
+wall_list = pygame.sprite.Group()

@@ -1,12 +1,6 @@
 import sys
 from classes import *
 
-'''
-Save game feature needed
-
-'''
-
-
 def save_game():
     print('wip')
 
@@ -14,17 +8,12 @@ def save_game():
 def main_menu():
     print('wip')
 
-    platforms = []  # array containing the platforms of the level
-    enemies = []  # array containing the enemies of the level
-    power_ups = []  # array containing the power ups of the level
-    time_enabled = False  # is this level timed
-
 
 def main():
     # game states
     done = False
-    level_number = 0  # level 0 by default means menu screen
-    SAVE_FILE = 'save_game.txt'
+    level_number = 1  # level 0 by default means menu screen
+    save_file = 'save_game.txt'
 
     # Colours
 
@@ -71,8 +60,9 @@ def main():
         # fill main screen with blue
         game_screen.fill(game_screen_fill)
 
-        # draw inner screen
-        pygame.draw.rect(game_screen, (0, 191, 255), pygame.Rect(INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT))
+        # draw inner screen if level is greater than 0 (main menu)
+        #if level_number > 0:
+            #inner_screen.fill(LBLUE)
 
         # update player and draw all sprites to screen
         player.update()
