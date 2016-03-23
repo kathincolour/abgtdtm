@@ -1,5 +1,5 @@
-import sys
 from classes import *
+
 
 def save_game():
     print('wip')
@@ -23,16 +23,16 @@ def main():
     # create the 4 walls to stop player
 
     # create top wall
-    wall_top = Wall((INNERSCREENX + 5), 0, (INNERSCREENWIDTH - 5), 5)
+    #wall_top = Wall((INNERSCREENX + 5), 0, (INNERSCREENWIDTH - 5), 5)
 
-    # bottom wall
-    wall_bottom = Wall(INNERSCREENX, (SCREENHEIGHT - 5), INNERSCREENWIDTH, 5)
+    # bottom wall - May not be needed, the game will look more continous without borders
+    #wall_bottom = Wall(INNERSCREENX, (SCREENHEIGHT - 5), INNERSCREENWIDTH, 5)
 
     # create left wall
     wall_left = Wall(INNERSCREENX, 0, 5, INNERSCREENHEIGHT)
 
     # create right wall
-    wall_right = Wall(INNERSCREENWIDTH + INNERSCREENX - 6, 5, 5, INNERSCREENHEIGHT)
+    wall_right = Wall(INNERSCREENWIDTH + INNERSCREENX, 0, 5, SCREENHEIGHT)
 
     while not done:
         for event in pygame.event.get():
@@ -40,32 +40,32 @@ def main():
                 done = True
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    player.change_speed(-1, 0)
+                    player.go_left()
                 elif event.key == pygame.K_RIGHT:
-                    player.change_speed(1, 0)
+                    player.go_right()
                 elif event.key == pygame.K_UP:
-                    player.change_speed(0, -1)
-                elif event.key == pygame.K_DOWN:
-                    player.change_speed(0, 1)
+                    player.jump()
+                #elif event.key == pygame.K_DOWN:
+                   #player.change_speed(0, 1)
+
             elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    player.change_speed(1, 0)
-                elif event.key == pygame.K_RIGHT:
-                    player.change_speed(-1, 0)
-                elif event.key == pygame.K_UP:
-                    player.change_speed(0, 1)
-                elif event.key == pygame.K_DOWN:
-                    player.change_speed(0, -1)
+                if event.key == pygame.K_LEFT and player.change_x < 0:
+                    player.stop()
+                if event.key == pygame.K_RIGHT and player.change_x > 0:
+                    player.stop()
 
         # fill main screen with blue
         game_screen.fill(game_screen_fill)
 
-        # draw inner screen if level is greater than 0 (main menu)
-        #if level_number > 0:
-            #inner_screen.fill(LBLUE)
 
-        # update player and draw all sprites to screen
+        # update player and level
         player.update()
+
+        current_level.update_level()
+
+        # draw below here
+        pygame.draw.rect(game_screen, LBLUE, (INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)) # draw inner screen
+        current_level.draw(game_screen)
         all_sprites.draw(game_screen)
 
         pygame.display.flip()
