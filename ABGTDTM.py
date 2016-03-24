@@ -63,6 +63,8 @@ def main():
 
         current_level.update_level()
 
+        current_level.move_level()
+
         # draw below here
         pygame.draw.rect(game_screen, LBLUE, (INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)) # draw inner screen
         current_level.draw(game_screen)

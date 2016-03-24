@@ -80,7 +80,7 @@ class Player(pygame.sprite.Sprite):
         if self.change_y == 0:
             self.change_y = 1
         else:
-            self.change_y += 0.11
+            self.change_y += 0.12
 
         # see if the player is on the ground/bottom
         if self.rect.y >= SCREENHEIGHT - self.rect.height and self.change_y >= 0:
@@ -103,7 +103,7 @@ class Player(pygame.sprite.Sprite):
     def go_left(self):
         # Called when the user hits the left arrow.
         self.image = self.image_left # flip the sprite image to the original if turning left
-        self.change_x = -1
+        self.change_x = -0.5
 
     def go_right(self):
         # Called when the user hits the right arrow.
@@ -135,7 +135,7 @@ class Wall(pygame.sprite.Sprite):
 class Platform(pygame.sprite.Sprite):
     def __init__(self, width, height):
         self.image = pygame.Surface([width, height])
-        self.image.fill(PURPLE)
+        self.image.fill(PURPLE) # maybe have a level specific colour/graphic here
 
         self.rect = self.image.get_rect()
 
@@ -150,7 +150,9 @@ class Level:
         self.enemies = pygame.sprite.Group()  # group containing the enemies of the level
         self.power_ups = pygame.sprite.Group()  # group containing the power ups of the level
         self.time_enabled = False  # is this level timed
-        self.level_height = SCREENHEIGHT * 3  # temporary multiplier
+        self.level_height = 3  # meaning 3 screen shifts therefore SCREENHEIGHT * 3 = maximum height = 1800
+        self.current_height = 0 # keeps track of current height in level
+        self.level_sprites = []
 
 
     def update_level(self):
@@ -163,16 +165,28 @@ class Level:
         self.platforms.draw(screen)
 
     def move_level(self):  # Check if player has reached edge of top screen
-        if player.rect.top <= SCREENHEIGHT - 2:
-            # all_sprites.rect.top -=
-            print('WIP')
+
+        if player.rect.top <= 1:
+            self.current_height += 1
+            if self.current_height == self.level_height:
+                self.new_level()
+            else:
+                for platform in self.platforms:
+                    if platform.rect.top > 0:
+                        platform.kill()
+                    else:
+                        if platform.rect.top <= -1200:
+                            platform.rect.top += SCREENHEIGHT * 2
+                        else:
+                            platform.rect.top += SCREENHEIGHT
+            player.rect.bottom = SCREENHEIGHT
+                # insert enemy move and power up move
 
     def new_level(self):
-        if player.rect.top <= self.level_height - 3:
-            print('Level complete')
-            # save game
-            # level number + 1
-            # generate new level
+        print('Level complete')
+        # save game
+        # level number + 1
+        # generate new level
 
 
 class Level_01(Level):
@@ -181,7 +195,13 @@ class Level_01(Level):
         Level.__init__(self)
 
         # array of platforms to be drawn- width, height, x, y
-        level = [[100, 50, 400, 430]]
+        # x must be greater than (or equal to) INNERSCREENX and less than 500
+        # y must be less than 600 (SCREENHEIGHT) and less than max screen height of level i.e. -1800
+        level = [[170, 40, 350, 430], [150, 40, INNERSCREENX, 300], [100, 40, INNERSCREENX + 230, 190],
+                 [150, 40, INNERSCREENX + 120, -150],[150, 40, INNERSCREENX + 350, -200],
+                 [150, 30, INNERSCREENX + 100, - 350], [150, 40, INNERSCREENX + 200, -500],
+                 [150, 40, INNERSCREENX + 100, -1350], [150, 40, INNERSCREENX + 350, -1500],
+                 [150, 40, INNERSCREENX + 200, -1650]]
 
         for platform in level:
             block = Platform(platform[0], platform[1])
