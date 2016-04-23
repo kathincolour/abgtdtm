@@ -1,10 +1,6 @@
 from classes import *
 
 
-def save_game():
-    print('wip')
-
-
 def main_menu():
     print('wip')
 
@@ -14,9 +10,6 @@ def main():
     done = False
     level_number = 1  # level 0 by default means menu screen
     save_file = 'save_game.txt'
-
-    # Colours
-
 
     pygame.display.set_caption('A Beginniner\'s guide to destroying the Moon')
 
@@ -57,7 +50,6 @@ def main():
         # fill main screen with blue
         game_screen.fill(game_screen_fill)
 
-
         # update player and level
         player.update()
 
@@ -66,7 +58,8 @@ def main():
         current_level.move_level()
 
         # draw below here
-        pygame.draw.rect(game_screen, LBLUE, (INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)) # draw inner screen
+        #pygame.draw.rect(game_screen, LBLUE, (INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)) # draw inner screen
+        game_screen.blit(current_level.background,[INNERSCREENX, SCREENHEIGHT])
         current_level.draw(game_screen)
         all_sprites.draw(game_screen)
 
