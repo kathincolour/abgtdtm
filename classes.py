@@ -30,6 +30,8 @@ class Player(pygame.sprite.Sprite):
         self.image_right = pygame.transform.flip(self.image_left, True, False)
         self.hurt_left = pygame.image.load("assets/protagonist_hurt1_spr.png").convert_alpha() # image of player when hurt by enemy
         self.hurt_right = pygame.transform.flip(self.hurt_left, True, False)
+        self.invincible = pygame.image.load("assets/protagonist_powerup_spr.png").convert_alpha()
+        self.invincible_right = pygame.transform.flip(self.invincible, True, False)
         self.image = self.image_left # set the default sprite image to left
 
         self.rect = self.image.get_rect()
@@ -41,7 +43,8 @@ class Player(pygame.sprite.Sprite):
 
         # variables related to gameplay
         self.lives = 4
-        self.invincibility = True
+        self.invincibility = False
+        self.tock = 0
 
 
     #def change_speed(self, x, y):
@@ -56,6 +59,13 @@ class Player(pygame.sprite.Sprite):
         # move left or right
         self.rect.x += self.change_x
 
+        if self.invincibility and self.tock < 1200:
+            self.tock += 1
+            print('tock')
+        else:
+            self.invincibility = False
+
+
 
         # check for collision with platform or wall
         block_hit_list = pygame.sprite.spritecollide(self, all_static_sprites, False)
@@ -64,6 +74,17 @@ class Player(pygame.sprite.Sprite):
                 self.rect.right = entity.rect.left  # Change player right side to equal object left side
             else:  # player is moving left
                 self.rect.left = entity.rect.right
+
+        # check for collision with power_up
+        pu_hit_list = pygame.sprite.spritecollide(self, current_level.power_ups, False)
+        for pu in pu_hit_list:
+            if pu.number == '1':
+                self.invincibility = True
+                print('invincible')
+                self.image = self.invincible
+            elif pu.number == '2':
+                self.lives += 1
+            pu.kill()
 
         # check for collision with enemy
         enemy_hit_list = pygame.sprite.spritecollide(self, current_level.enemies, False)
@@ -81,8 +102,6 @@ class Player(pygame.sprite.Sprite):
                     self.rect.x += 5
                 elif self.change_y > 0: # player is moving downwards
                     self.rect.bottom = enemy.rect.top
-
-
 
             else: # invincibility is on and player doesn't lose health
                 if self.change_x > 0:  # player is moving right because it is positive
@@ -131,12 +150,18 @@ class Player(pygame.sprite.Sprite):
 
     def go_left(self):
         # Called when the user hits the left arrow.
-        self.image = self.image_left # flip the sprite image to the original if turning left
+        if self.invincibility:
+            self.image = self.invincible   # change to the invincible sprite look
+        else:
+            self.image = self.image_left # flip the sprite image to the original if turning left
         self.change_x = -0.5
 
     def go_right(self):
         # Called when the user hits the right arrow.
-        self.image = self.image_right # flip sprite image
+        if self.invincibility:
+            self.image = self.invincible_right   # change to the invincible sprite look
+        else:
+            self.image = self.image_right # flip sprite image
         self.change_x = 1
 
     def stop(self):
@@ -216,6 +241,20 @@ class Wall(pygame.sprite.Sprite):
         all_static_sprites.add(self)
 
 
+class Power_up(pygame.sprite.Sprite):
+    def __init__(self, no, x, y):
+        pygame.sprite.Sprite.__init__(self)
+
+        # create power up sprite from image file
+        self.image = pygame.image.load("assets/" + no + "_spr" + ".png").convert_alpha()
+
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.bottom = y
+
+        self.number = no[7]   # denotes the type of power up- to be used by the player class when interacting
+
+
 class Platform(pygame.sprite.Sprite):
     def __init__(self, width, height):
         self.image = pygame.Surface([width, height])
@@ -247,6 +286,7 @@ class Level:
         """ Update everything in this level."""
         self.platforms.update()
         self.enemies.update()
+        self.power_ups.update()
 
     def draw(self, screen):  # draw everything on the level
 
@@ -254,6 +294,7 @@ class Level:
         # draw the sprites
         self.platforms.draw(screen)
         self.enemies.draw(screen)
+        self.power_ups.draw(screen)
 
     def move_level(self):  # Check if player has reached edge of top screen
 
@@ -306,6 +347,10 @@ class Level_01(Level):
         # x & y should be on a platform or the ground - follow the level_platforms array
         level_enemies = [['test', 360, 500, 1]]
 
+        # array of power ups to be drawn- 'no' type should be string for file, x, y
+        # can be drawn anywhere on screen (but not on top of platforms)
+        level_power_ups = [['powerup1', INNERSCREENX + 100, 600]]
+
         for platform in level_platforms:
             block = Platform(platform[0], platform[1])
             block.rect.x = platform[2]
@@ -316,6 +361,38 @@ class Level_01(Level):
         for enemy in level_enemies:
             entity = Enemy(enemy[0], enemy[1], enemy[2], enemy[3])
             self.enemies.add(entity)
+
+        for power_up in level_power_ups:
+            pu = Power_up(power_up[0], power_up[1], power_up[2])
+            self.power_ups.add(pu)
+
+class Level_02(Level):
+    def __init__(self):
+        # Call the parent constructor
+        Level.__init__(self)
+
+        self.background = None
+
+        # array of platforms to be drawn- width, height, x, y
+        # x must be greater than (or equal to) INNERSCREENX and less than 500
+        # y must be less than 600 (SCREENHEIGHT) and less than max screen height of level i.e. -1800
+        level_platforms = []
+
+        # array of enemies to be drawn- type of enemy (file name), x, y, speed
+        # x & y should be on a platform or the ground - follow the level_platforms array
+        level_enemies = []
+
+        for platform in level_platforms:
+            block = Platform(platform[0], platform[1])
+            block.rect.x = platform[2]
+            block.rect.y = platform[3]
+            self.platforms.add(block)
+            all_static_sprites.add(block)
+
+        for enemy in level_enemies:
+            entity = Enemy(enemy[0], enemy[1], enemy[2], enemy[3])
+            self.enemies.add(entity)
+
 
 
 

@@ -12,6 +12,7 @@ def main():
     save_file = 'save_game.txt'
 
     pygame.display.set_caption('A Beginniner\'s guide to destroying the Moon')
+    clock = pygame.time.Clock()
 
     # create the 4 walls to stop player
 
@@ -64,6 +65,7 @@ def main():
         all_sprites.draw(game_screen)
 
         pygame.display.flip()
+        clock.tick(210)
 
     pygame.quit()
 
