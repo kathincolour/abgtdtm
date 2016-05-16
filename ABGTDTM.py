@@ -1,37 +1,46 @@
+import sys
+
 from classes import *
 
 
-def main_menu():
-    print('wip')
-
-
 def main():
-    # game states
-    done = False
-    level_number = 1  # level 0 by default means menu screen
+
     save_file = 'save_game.txt'
 
-    pygame.display.set_caption('A Beginniner\'s guide to destroying the Moon')
+    pygame.display.set_caption('A Beginner\'s guide to destroying the Moon')
     clock = pygame.time.Clock()
 
-    # create the 4 walls to stop player
+    if game_control.current_level_no > 0:
+        # create left wall to stop player
+        wall_left = Wall(INNERSCREENX, 0, 5, INNERSCREENHEIGHT)
 
-    # create top wall
-    #wall_top = Wall((INNERSCREENX + 5), 0, (INNERSCREENWIDTH - 5), 5)
+        # create right wall
+        wall_right = Wall(INNERSCREENWIDTH + INNERSCREENX, 0, 5, SCREENHEIGHT)
 
-    # bottom wall - May not be needed, the game will look more continous without borders
-    #wall_bottom = Wall(INNERSCREENX, (SCREENHEIGHT - 5), INNERSCREENWIDTH, 5)
-
-    # create left wall
-    wall_left = Wall(INNERSCREENX, 0, 5, INNERSCREENHEIGHT)
-
-    # create right wall
-    wall_right = Wall(INNERSCREENWIDTH + INNERSCREENX, 0, 5, SCREENHEIGHT)
-
-    while not done:
+    while game_control.current_level_no == 0 and not game_control.done:   # while main menu is functioning
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                done = True
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:  # when user presses up key
+                    game_control.target_up()
+                elif event.key == pygame.K_DOWN:  # when user presses down key
+                    game_control.current_level.target_down()
+                elif event.key == pygame.K_RETURN:  # when user presses enter key
+                    game_control.current_level.select()
+
+        game_control.current_level.draw(game_screen)
+        game_control.current_level.target_button()
+        pygame.display.flip()
+        clock.tick(220)
+    game_control.done = False
+    game_control.change_level()
+
+    while game_control.current_level_no > 0 and not game_control.done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_control.done = True
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     player.go_left()
@@ -39,8 +48,6 @@ def main():
                     player.go_right()
                 elif event.key == pygame.K_UP:
                     player.jump()
-                #elif event.key == pygame.K_DOWN:
-                   #player.change_speed(0, 1)
 
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT and player.change_x < 0:
@@ -54,18 +61,18 @@ def main():
         # update player and level
         player.update()
 
-        current_level.update_level()
+        game_control.current_level.update_level()
 
-        current_level.move_level()
+        game_control.current_level.move_level()
 
         # draw below here
-        #pygame.draw.rect(game_screen, LBLUE, (INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)) # draw inner screen
-        game_screen.blit(current_level.background,[INNERSCREENX, SCREENHEIGHT])
-        current_level.draw(game_screen)
+        # pygame.draw.rect(game_screen, LBLUE, (INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)) # draw inner screen
+        # game_screen.blit(current_level.background,(INNERSCREENX, SCREENHEIGHT))
+        game_control.current_level.draw(game_screen)
         all_sprites.draw(game_screen)
 
         pygame.display.flip()
-        clock.tick(210)
+        clock.tick(220)
 
     pygame.quit()
 
