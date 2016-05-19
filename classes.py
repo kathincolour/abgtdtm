@@ -292,6 +292,20 @@ class Background(pygame.sprite.Sprite):
         self.rect.bottom = SCREENHEIGHT
 
 
+class Selector(pygame.sprite.Sprite):   # class for button selector- shows which button is currently selected
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('assets/powerup2_spr.png').convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+
+    def move_down(self):
+        self.rect.y += 70
+
+    def move_up(self):
+        self.rect.y -= 70
+
+
 class Button(pygame.sprite.Sprite):
     def __init__(self, txt, x, y, w, h, func):
         pygame.sprite.Sprite.__init__(self)
@@ -300,12 +314,15 @@ class Button(pygame.sprite.Sprite):
         self.highlight = LLBLUE
 
         self.rect = self.image.get_rect()
-        self.rect.x = x
+        self.rect.centerx = x
         self.rect.y = y
 
         self.func = func
 
-        self.button_font = pygame.font.Font(None, 15)
+        self.button_font = pygame.font.Font(None, 30)
+        self.button_text = self.button_font.render(txt, 0, WHITE)
+        self.txtpos = self.button_text.get_rect()
+        self.txtpos.center = self.rect.center
 
 
 class Main_menu:
@@ -313,48 +330,56 @@ class Main_menu:
     def __init__(self):
 
         self.buttons = []  # group for buttons to be added
+        self.selectors = pygame.sprite.Group()
         self.buttons_sprite = pygame.sprite.Group()  # sprite group for buttons so they can be drawn
         self.backgrounds = pygame.sprite.Group()
         self.background_1 = Background('1')
         self.background_2 = Background('1')
-        self.background = random.choice([self.background_1, self.background_2])  # chooses between 2 different backgrounds to draw
+        self.background = self.background_1
+        #self.background = random.choice([self.background_1, self.background_2])  # chooses between 2 different backgrounds to draw
         self.backgrounds.add(self.background)
         '''self.background.rect.x = 0
         self.background.rect.y = SCREENHEIGHT '''
 
         self.target = 0
 
-        self.main_font = pygame.font.Font('assets/font1.ttf', 100)
+        self.main_font = pygame.font.Font('assets/font1.ttf', 45)
         self.title_text = self.main_font.render('A Beginner\'s guide to', 0, WHITE)
         self.title_text1 = self.main_font.render('Destroying the Moon', 0, WHITE)
 
-        # create buttons
-        self.n_game_button = Button('New Game', 200, 280, 300, 100, 'new')
+        # create buttons and add to both arrays
+        self.n_game_button = Button('New Game', 400, 220, 300, 60, 'new')
         self.buttons.append(self.n_game_button)
         self.buttons_sprite.add(self.n_game_button)
-        self.c_game_button = Button('Continue Game', 200, 330, 300, 100, 'cont')
+        self.c_game_button = Button('Continue Game', 400, 290, 300, 60, 'cont')
         self.buttons.append(self.c_game_button)
         self.buttons_sprite.add(self.c_game_button)
-        self.help_button = Button('Help', 200, 380, 300, 100, 'help')
+        self.help_button = Button('Help', 400, 360, 300, 60, 'help')
         self.buttons.append(self.help_button)
         self.buttons_sprite.add(self.help_button)
-        self.options_button = Button('Options',200, 430, 300, 100, 'opt')
+        self.options_button = Button('Options',400, 430, 300, 60, 'opt')
         self.buttons.append(self.options_button)
         self.buttons_sprite.add(self.options_button)
-        self.quit_button = Button('Quit', 200, 480, 300, 100, 'quit')
+        self.quit_button = Button('Quit', 400, 500, 300, 60, 'quit')
         self.buttons.append(self.quit_button)
         self.buttons_sprite.add(self.quit_button)
+
+        self.selector = Selector((520,250))
+        self.selectors.add(self.selector)
 
     def draw(self, screen):
         self.backgrounds.draw(screen)
         self.buttons_sprite.draw(screen)
-        self.title_text.blit(screen, (200, 200))
-        self.title_text1.blit(screen, (250, 250))
+        screen.blit(self.title_text, (170, 100))
+        screen.blit(self.title_text1, (200, 150))
+        for button in self.buttons:
+            screen.blit(button.button_text, button.txtpos)
+        self.selectors.draw(screen)
 
     def target_button(self):
         if self.target <= 4 or self.target >= 0:
             current_button = self.buttons[self.target]
-            current_button.image.fill(LBLUE)
+            #current_button.image.fill(LBLUE)
 
     def target_up(self):  # called when user pressed up key
         print('up key')
@@ -362,6 +387,7 @@ class Main_menu:
             print('move up')
             self.target -= 1
             print(str(self.target))
+            self.selector.move_up()
 
     def target_down(self):
         print('down key')
@@ -369,6 +395,7 @@ class Main_menu:
             print('move down')
             self.target += 1
             print(str(self.target))
+            self.selector.move_down()
 
     def select(self):
         print('select key')

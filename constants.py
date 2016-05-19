@@ -7,7 +7,7 @@ LLBLUE = (138, 242, 255)
 LBLUE = (39, 219, 242)
 PURPLE = (128, 0, 128)
 WHITE = (255, 255, 255)
-BLACK = (0,0,0)
+BLACK = (0, 0, 0)
 
 # screens and dimensions
 SCREENWIDTH = 800

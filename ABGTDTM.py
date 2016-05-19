@@ -24,11 +24,13 @@ def main():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:  # when user presses up key
-                    game_control.target_up()
+                    game_control.current_level.target_up()
                 elif event.key == pygame.K_DOWN:  # when user presses down key
                     game_control.current_level.target_down()
                 elif event.key == pygame.K_RETURN:  # when user presses enter key
                     game_control.current_level.select()
+
+        game_control.current_level.target_button()
 
         game_control.current_level.draw(game_screen)
         game_control.current_level.target_button()
