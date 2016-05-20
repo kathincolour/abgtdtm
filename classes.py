@@ -78,9 +78,15 @@ class Player(pygame.sprite.Sprite):
         else:
             self.invincibility = False
 
+        # check for collision with walls
+        wall_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
+        for wall in wall_hit_list:
+            if self.change_x > 0:  # player is moving right because it is positive
+                self.rect.right = wall.rect.left  # Change player right side to equal object left side
+            else:  # player is moving left
+                self.rect.left = wall.rect.right
 
-
-        # check for collision with platform or wall
+        # check for collision with platform
         block_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
         for entity in block_hit_list:
             if self.change_x > 0:  # player is moving right because it is positive
@@ -97,6 +103,7 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.invincible
             elif pu.number == '2':
                 self.lives += 1
+            pu.sound.play()
             pu.kill()
 
         # check for collision with enemy
@@ -106,14 +113,18 @@ class Player(pygame.sprite.Sprite):
                 self.lives -= 1
                 self.check_health()
                 # play sound or change player sprite here
+                enemy.sound.play()
 
                 if self.change_x > 0:  # player is moving right because it is positive
+                    self.image = self.hurt_right
                     self.rect.right = enemy.rect.left  # Change player right side to equal object left side
                     self.rect.x -= 5
                 elif self.change_x < 0:  # player is moving left
-                    self.rect.left = enemy.rect.right
+                    self.image = self.hurt_left
+                    self.rect.left = enemy.rect.right  # change player left side to equal object right side
                     self.rect.x += 5
                 elif self.change_y > 0: # player is moving downwards
+                    self.image = self.hurt_left
                     self.rect.bottom = enemy.rect.top
 
             else: # invincibility is on and player doesn't lose health
@@ -166,7 +177,7 @@ class Player(pygame.sprite.Sprite):
         if self.invincibility:
             self.image = self.invincible   # change to the invincible sprite look
         else:
-            self.image = self.image_left # flip the sprite image to the original if turning left
+            self.image = self.image_left   # flip the sprite image to the original if turning left
         self.change_x = -0.5
 
     def go_right(self):
@@ -209,6 +220,11 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.bottom = y
+
+        self.sound = pygame.mixer.Sound('assets/music/hurt.wav')
+        self.volume = self.sound.get_volume()
+        self.sound.set_volume((self.volume - 0.5))
+
 
         self.direction = 'right'
 
@@ -269,6 +285,10 @@ class Power_up(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.bottom = y
 
+        self.sound = pygame.mixer.Sound('assets/music/powerup.wav')
+        self.volume = self.sound.get_volume()
+        self.sound.set_volume((self.volume - 0.1))
+
         self.number = no[7]   # denotes the type of power up- to be used by the player class when interacting
 
 
@@ -288,8 +308,10 @@ class Background(pygame.sprite.Sprite):
         self.image = pygame.image.load('assets/background_' + file + '.png').convert()
         self.image.set_alpha(200)
         self.rect = self.image.get_rect()
-        self.rect.x = INNERSCREENX
-        self.rect.bottom = SCREENHEIGHT
+
+        if file == '1':
+            self.rect.x = INNERSCREENX
+            self.rect.bottom = SCREENHEIGHT
 
 
 class Selector(pygame.sprite.Sprite):   # class for button selector- shows which button is currently selected
@@ -334,12 +356,10 @@ class Main_menu:
         self.buttons_sprite = pygame.sprite.Group()  # sprite group for buttons so they can be drawn
         self.backgrounds = pygame.sprite.Group()
         self.background_1 = Background('1')
-        self.background_2 = Background('1')
-        self.background = self.background_1
-        #self.background = random.choice([self.background_1, self.background_2])  # chooses between 2 different backgrounds to draw
-        self.backgrounds.add(self.background)
-        '''self.background.rect.x = 0
-        self.background.rect.y = SCREENHEIGHT '''
+        self.background_2 = Background('main')
+        self.background = random.choice([self.background_1, self.background_2])  # chooses between 2 different backgrounds to draw
+        self.backgrounds.add(self.background_2)
+        self.soundtrack = 'assets/music/god.ogg'
 
         self.target = 0
 
@@ -524,7 +544,10 @@ class Level:
         game_control.current_level_no += 1  # level number + 1
         print(str(game_control.current_level_no))
 
+        pygame.mixer.music.fadeout(750)
         game_control.change_level()
+        pygame.mixer.music.load(game_control.current_level.soundtrack)
+        pygame.mixer.music.play(-1)
 
 
 class Level_01(Level):
@@ -533,6 +556,7 @@ class Level_01(Level):
         Level.__init__(self)
 
         self.background = pygame.image.load("assets/background_1.png")
+        self.soundtrack = 'assets/music/mono.ogg'
 
         # array of platforms to be drawn- width, height, x, y
         # x must be greater than (or equal to) INNERSCREENX and less than 500
@@ -571,12 +595,14 @@ class Level_01(Level):
         level_background = Background('1')
         self.backgrounds.add(level_background)
 
+
 class Level_02(Level):
     def __init__(self):
         # Call the parent constructor
         Level.__init__(self)
 
         self.background = None
+        self.soundtrack = 'assets/music/god.ogg'
 
         # array of platforms to be drawn- width, height, x, y
         # x should be greater than (or equal to) INNERSCREENX and less than 500

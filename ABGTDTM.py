@@ -10,13 +10,8 @@ def main():
     pygame.display.set_caption('A Beginner\'s guide to destroying the Moon')
     clock = pygame.time.Clock()
 
-    if game_control.current_level_no > 0:
-        # create left wall to stop player
-        wall_left = Wall(INNERSCREENX, 0, 5, INNERSCREENHEIGHT)
-
-        # create right wall
-        wall_right = Wall(INNERSCREENWIDTH + INNERSCREENX, 0, 5, SCREENHEIGHT)
-
+    pygame.mixer.music.load(game_control.current_level.soundtrack)
+    pygame.mixer.music.play(-1)
     while game_control.current_level_no == 0 and not game_control.done:   # while main menu is functioning
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -38,6 +33,17 @@ def main():
         clock.tick(220)
     game_control.done = False
     game_control.change_level()
+
+    pygame.mixer.music.fadeout(750)
+    pygame.mixer.music.load(game_control.current_level.soundtrack)
+    pygame.mixer.music.play(-1)
+
+    if game_control.current_level_no > 0:
+        # create left wall to stop player
+        wall_left = Wall(INNERSCREENX, 0, 5, INNERSCREENHEIGHT)
+
+        # create right wall
+        wall_right = Wall(INNERSCREENWIDTH + INNERSCREENX, 0, 5, SCREENHEIGHT)
 
     while game_control.current_level_no > 0 and not game_control.done:
         for event in pygame.event.get():
