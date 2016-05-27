@@ -69,6 +69,8 @@ def main():
         # update player and level
         player.update()
 
+        hearts.draw(game_screen)
+
         game_control.current_level.update_level()
 
         game_control.current_level.move_level()

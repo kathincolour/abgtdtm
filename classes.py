@@ -35,14 +35,37 @@ class Game_control:
 game_control = Game_control()
 
 
+class Screen_element(pygame.sprite.Sprite):  # sprite class for visible objects on the side of the screen e.g. lives
+    def __init__(self, name,x, y):
+        pygame.sprite.Sprite.__init__(self)
+
+        self.image = pygame.image.load("assets/"+ name + "_spr.png").convert_alpha()
+
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.bottom = y
+
+heart1 = Screen_element('test', 660, 50)
+heart2 = Screen_element('test', (heart1.rect.x + heart1.rect.width + 10), 50)
+heart3 = Screen_element('test', (heart2.rect.x + heart2.rect.width + 10), 50)
+heart4 = Screen_element('test', (heart3.rect.x + heart3.rect.width + 10), 50)
+hearts = pygame.sprite.Group()
+hearts.add(heart1)
+hearts.add(heart2)
+hearts.add(heart3)
+hearts.add(heart4)
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
 
         self.image_left = pygame.image.load("assets/protagonist_spr.png").convert_alpha()
         self.image_right = pygame.transform.flip(self.image_left, True, False)
-        self.hurt_left = pygame.image.load("assets/protagonist_hurt1_spr.png").convert_alpha() # image of player when hurt by enemy
+        # image of player when hurt by enemy
+        self.hurt_left = pygame.image.load("assets/protagonist_hurt1_spr.png").convert_alpha()
         self.hurt_right = pygame.transform.flip(self.hurt_left, True, False)
+        # image of player when invincibility = true
         self.invincible = pygame.image.load("assets/protagonist_powerup_spr.png").convert_alpha()
         self.invincible_right = pygame.transform.flip(self.invincible, True, False)
         self.image = self.image_left # set the default sprite image to left
@@ -58,11 +81,7 @@ class Player(pygame.sprite.Sprite):
         self.lives = 4
         self.invincibility = False
         self.tock = 0
-
-
-    #def change_speed(self, x, y):
-        #self.change_x += x
-        #self.change_y += y
+        self.time = 0
 
     def update(self):
 
@@ -103,20 +122,22 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.invincible
             elif pu.number == '2':
                 self.lives += 1
+                self.add_hearts()
             pu.sound.play()
             pu.kill()
 
         # check for collision with enemy
         enemy_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.enemies, False)
         for enemy in enemy_hit_list:
-            if not self.invincibility:
+            if not self.invincibility and (pygame.time.get_ticks() - self.time) > 700:
+                # make sure player doesn't die straight away b checking how much time has passed.
                 self.lives -= 1
-                self.check_health()
-                # play sound or change player sprite here
+
+                # play sound
                 enemy.sound.play()
 
                 if self.change_x > 0:  # player is moving right because it is positive
-                    self.image = self.hurt_right
+                    self.image = self.hurt_right  # change player image to 'hurt' sprite
                     self.rect.right = enemy.rect.left  # Change player right side to equal object left side
                     self.rect.x -= 5
                 elif self.change_x < 0:  # player is moving left
@@ -126,13 +147,16 @@ class Player(pygame.sprite.Sprite):
                 elif self.change_y > 0: # player is moving downwards
                     self.image = self.hurt_left
                     self.rect.bottom = enemy.rect.top
+                self.remove_hearts()
+                self.check_health()
+                self.time = pygame.time.get_ticks()
+
 
             else: # invincibility is on and player doesn't lose health
                 if self.change_x > 0:  # player is moving right because it is positive
                     self.rect.right = enemy.rect.left  # Change player right side to equal object left side
                 else:  # player is moving left
                     self.rect.left = enemy.rect.right
-
 
         # move up or down
         self.rect.y += self.change_y
@@ -192,6 +216,25 @@ class Player(pygame.sprite.Sprite):
         # Called when the user lets off the keyboard.
         self.change_x = 0
 
+    def add_hearts(self):
+        if self.lives == 4:
+            hearts.add(heart4)
+        elif self.lives == 3:
+            hearts.add(heart3)
+        elif self.lives == 2:
+            hearts.add(heart2)
+
+
+    def remove_hearts(self):
+        if self.lives == 3:
+            hearts.remove(heart4)
+        elif self.lives == 2:
+            hearts.remove(heart3)
+        elif self.lives == 1:
+            hearts.remove(heart2)
+        elif self.lives == 0:
+            hearts.remove(heart1)
+
     def check_health(self):
         if self.lives <= 0:
             # restart level
@@ -213,6 +256,7 @@ class Enemy(pygame.sprite.Sprite):
         """
         pygame.sprite.Sprite.__init__(self)
 
+        self.time_since_last_flip = pygame.time.get_ticks()
         self.image_left = pygame.image.load("assets/enemy1_spr.png").convert_alpha()
         self.image_right = pygame.transform.flip(self.image_left, True, False)
         self.image = self.image_left # set the default sprite image to left
@@ -225,36 +269,44 @@ class Enemy(pygame.sprite.Sprite):
         self.volume = self.sound.get_volume()
         self.sound.set_volume((self.volume - 0.5))
 
-
-        self.direction = 'right'
+        self.direction = -1  # 1 denotes a rightward motion, whilst -1 denotes left
+        self.speed = speed
 
     def update(self):
-        # test to see where the enemy is
 
-        platform_hit = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
-        if len(platform_hit) > 0:
-            for platform in platform_hit:
-                if self.rect.bottom == platform.rect.topleft and self.change_x <= 0:
-                    self.go_right()
+        self.gravity()
 
-                elif self.rect.bottom == platform.rect.topright and self.change_x > 0:
-                    self.go_left()
+        platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
+        for platform in platform_hit_list:
+            self.rect.x += self.speed * self.direction
+            print(str(self.rect.x))
+            print(str(self.direction))
+            #print(str(self.rect.x))
+            #if platform.rect.left <= self.rect.left <= (platform.rect.left + 5):
+            index_rect = self.rect.collidelist(game_control.current_level.platform_rects)
+            if not game_control.current_level.platform_rects[index_rect].contains(self.rect):
+                    print('yes')
+                    self.flip()
+                    self.time_since_last_flip = pygame.time.get_ticks()
+            '''elif platform.rect.right <= self.rect.right <= (platform.rect.right + 5):
+                if pygame.time.get_ticks() >= self.time_since_last_flip + 1000:
+                    self.flip()
+                    self.time_since_last_flip = pygame.time.get_ticks() '''
 
-        elif self.rect.bottom == SCREENHEIGHT: # enemy is on the bottom of the screen
-            wall_hit_list = pygame.sprite.spritecollide(self, wall_list, False)
-            for entity in wall_hit_list:
-                if self.image == self.image_right:  # enemy is moving right because it is positive
-                    self.rect.right = entity.rect.left  # Change enemy right side to equal object left side
-                else:  # enemy is moving left
-                    self.rect.left = entity.rect.right
+    def gravity(self):
 
-    def go_left(self):
-        self.image = self.image_left  # flip the sprite image to the original if turning left
-        self.rect.x -= 2
+        platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
+        while len(platform_hit_list) == 0:
+            self.rect.y += 1
+            platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
 
-    def go_right(self):
-        self.image = self.image_right # flip sprite image
-        self.rect.x += 2
+    def flip(self):
+        if self.direction == 1:  # going right
+            self.image = self.image_left
+            self.direction = -1   # change to going left
+        elif self.direction == -1:
+            self.image = self.image_right
+            self.direction = 1
 
 
 class Wall(pygame.sprite.Sprite):
@@ -466,6 +518,7 @@ class Level:
 
     def __init__(self):
         self.platforms = pygame.sprite.Group()  # group containing the platform objects of the level
+        self.platform_rects = []    # array to store the second collision rects of the platforms
         self.enemies = pygame.sprite.Group()  # group containing the enemies of the level
         self.power_ups = pygame.sprite.Group()  # group containing the power ups of the level
         self.backgrounds = pygame.sprite.Group()  # create a sprite group for the background image so it is easier
@@ -549,6 +602,12 @@ class Level:
         pygame.mixer.music.load(game_control.current_level.soundtrack)
         pygame.mixer.music.play(-1)
 
+    def platform_rect(self):
+        for platform in self.platforms:
+            second_rect = platform.image.get_rect()
+            second_rect.bottom = platform.rect.top
+            second_rect.height += 20
+            self.platform_rects.append(second_rect)
 
 class Level_01(Level):
     def __init__(self):
@@ -569,7 +628,7 @@ class Level_01(Level):
 
         # array of enemies to be drawn- type of enemy (file name), x, y, speed
         # x & y should be on a platform or the ground - follow the level_platforms array
-        level_enemies = [['test', 360, 500, 1]]
+        level_enemies = [['test', 400, 430, 0.0001]]
 
         # array of power ups to be drawn- 'no' type should be string for file, x, y
         # can be drawn anywhere on screen (but not on top of platforms)
@@ -592,6 +651,7 @@ class Level_01(Level):
             self.power_ups.add(pu)
             self.level_sprites.add(pu)
 
+        self.platform_rect()
         level_background = Background('1')
         self.backgrounds.add(level_background)
 
