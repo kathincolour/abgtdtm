@@ -22,6 +22,8 @@ objects
 from ABGTDTM import *
 import random, os
 
+clock = pygame.time.Clock()
+
 class Game_control:
     def __init__(self):
         self.done = False
@@ -31,6 +33,7 @@ class Game_control:
 
     def change_level(self):
         self.current_level = self.level_list[self.current_level_no]
+
 
 game_control = Game_control()
 
@@ -45,6 +48,40 @@ class Screen_element(pygame.sprite.Sprite):  # sprite class for visible objects 
         self.rect.x = x
         self.rect.bottom = y
 
+
+class Help_Text(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+
+        self.image = pygame.Surface([130, 50])
+        self.image.fill(LLBLUE)  # maybe have a level specific colour/graphic here
+
+        self.rect = self.image.get_rect()
+        self.rect.x = 3
+        self.rect.y = 270
+        self.texts = ['Remember to collect power-ups', 'The moon is watching', 'Each level brings you closer']
+        self.text = random.choice(self.texts)
+
+        self.font2 = pygame.font.Font(None, 20)
+        if len(self.text) > 16:
+            self.text1 = self.text[0:17]
+            self.text2 = self.text[17:]
+
+        else:
+            self.text1 = self.text
+            self.text2 = 'null'
+
+    def draw_text(self,screen):
+        if self.text2 != 'null':
+            help_1 = self.font2.render(self.text1, 0, BLACK)
+            help_2 = self.font2.render(self.text2, 0, BLACK)
+
+            screen.blit(help_1, (3, self.rect.y + 5))
+            screen.blit(help_2, (3, self.rect.y + 15))
+        else:
+            help_1 = self.font2.render(self.text1, 0, BLACK)
+            screen.blit(help_1, (3, 455))
+
 heart1 = Screen_element('test', 660, 50)
 heart2 = Screen_element('test', (heart1.rect.x + heart1.rect.width + 10), 50)
 heart3 = Screen_element('test', (heart2.rect.x + heart2.rect.width + 10), 50)
@@ -54,6 +91,10 @@ hearts.add(heart1)
 hearts.add(heart2)
 hearts.add(heart3)
 hearts.add(heart4)
+
+goddess = Screen_element('goddess', 3, 500)
+goddess_group = pygame.sprite.GroupSingle()
+goddess_group.add(goddess)
 
 
 class Player(pygame.sprite.Sprite):
@@ -93,7 +134,7 @@ class Player(pygame.sprite.Sprite):
 
         if self.invincibility and self.tock < 1200:
             self.tock += 1
-            print('tock')
+            #print('tock')
         else:
             self.invincibility = False
 
@@ -118,7 +159,7 @@ class Player(pygame.sprite.Sprite):
         for pu in pu_hit_list:
             if pu.number == '1':
                 self.invincibility = True
-                print('invincible')
+                #print('invincible')
                 self.image = self.invincible
             elif pu.number == '2':
                 self.lives += 1
@@ -224,7 +265,6 @@ class Player(pygame.sprite.Sprite):
         elif self.lives == 2:
             hearts.add(heart2)
 
-
     def remove_hearts(self):
         if self.lives == 3:
             hearts.remove(heart4)
@@ -238,21 +278,28 @@ class Player(pygame.sprite.Sprite):
     def check_health(self):
         if self.lives <= 0:
             # restart level
-            print('death')
+            self.death()
 
     def death(self):
-        # show death sprite?
-        inner_screen.fill(BLUE)
+        # when player lives = 0
+        self.lives = 4
+        pygame.time.delay(1000) # wait a second to let user adjust
+        # add back lives
+        hearts.add(heart1)
+        hearts.add(heart2)
+        hearts.add(heart3)
+        hearts.add(heart4)
+        game_control.current_level.restart_level() # create new fresh instance of the level
+        # position player back at start
+        self.rect.x = 500
+        self.rect.y = SCREENHEIGHT + 10
 
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, enem, x, y, speed):
         """
         :param enem: name of sprite file without _spr
-        :param x:
-        :param y:
-        :param speed:
-        :return:
+        :param speed: how much the enemy moves each frame
         """
         pygame.sprite.Sprite.__init__(self)
 
@@ -276,7 +323,7 @@ class Enemy(pygame.sprite.Sprite):
 
         self.gravity()
 
-        platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
+        '''platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
         for platform in platform_hit_list:
             self.rect.x += self.speed * self.direction
             print(str(self.rect.x))
@@ -288,17 +335,17 @@ class Enemy(pygame.sprite.Sprite):
                     print('yes')
                     self.flip()
                     self.time_since_last_flip = pygame.time.get_ticks()
-            '''elif platform.rect.right <= self.rect.right <= (platform.rect.right + 5):
+            elif platform.rect.right <= self.rect.right <= (platform.rect.right + 5):
                 if pygame.time.get_ticks() >= self.time_since_last_flip + 1000:
                     self.flip()
                     self.time_since_last_flip = pygame.time.get_ticks() '''
 
     def gravity(self):
-
-        platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
-        while len(platform_hit_list) == 0:
-            self.rect.y += 1
+        if self.rect.y > 0:
             platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
+            while len(platform_hit_list) == 0 and not self.rect.bottom == 599:
+                self.rect.y += 1
+                platform_hit_list = pygame.sprite.spritecollide(self, game_control.current_level.platforms, False)
 
     def flip(self):
         if self.direction == 1:  # going right
@@ -454,27 +501,25 @@ class Main_menu:
             #current_button.image.fill(LBLUE)
 
     def target_up(self):  # called when user pressed up key
-        print('up key')
+        #print('up key')
         if self.target > 0:
-            print('move up')
+            #print('move up')
             self.target -= 1
-            print(str(self.target))
+            #print(str(self.target))
             self.selector.move_up()
 
     def target_down(self):
-        print('down key')
+        #print('down key')
         if self.target < 4:
-            print('move down')
+            #print('move down')
             self.target += 1
-            print(str(self.target))
+            #print(str(self.target))
             self.selector.move_down()
 
     def select(self):
-        print('select key')
         current_button = self.buttons[self.target]
 
         if current_button.func == 'new':
-            print('new')
             self.new_game()
         elif current_button.func == 'cont':
             self.continue_game()
@@ -490,17 +535,14 @@ class Main_menu:
         open('save_file.txt', 'w').close()   # empty save file
 
         game_control.current_level_no = 1
-        print(str(game_control.current_level_no))
         game_control.done = True
-        print(str(game_control.current_level))
 
     def continue_game(self):
-        print('cont')
         if os.path.getsize('save_file.txt') > 0:  # if save file is not empty (could throw exception otherwise)
             with open('save_file.txt', 'r') as file:
                 game_control.current_level_no = int(file.read())
         else:
-            print('yes')
+            #print('yes')
             game_control.current_level_no = 1
         game_control.done = True
 
@@ -517,6 +559,7 @@ class Level:
     """ super class used to define each level """
 
     def __init__(self):
+        print(self)
         self.platforms = pygame.sprite.Group()  # group containing the platform objects of the level
         self.platform_rects = []    # array to store the second collision rects of the platforms
         self.enemies = pygame.sprite.Group()  # group containing the enemies of the level
@@ -526,6 +569,11 @@ class Level:
         self.level_height = 3  # meaning 3 screen shifts therefore SCREENHEIGHT * 3 = maximum height = 1800
         self.current_height = 0 # keeps track of current height in level
         self.level_sprites = pygame.sprite.Group()  # sprite group containing all sprites in level
+        self.texts =  pygame.sprite.Group() # to hold the help text etc
+        self.help_text = Help_Text()
+
+        self.level_font = pygame.font.Font('assets/font1.ttf', 30)
+        self.level_text = None
 
         self.soundtrack = None  # pygame.mixer.music.load
         self.background = None
@@ -542,19 +590,25 @@ class Level:
         self.platforms.draw(screen)
         self.enemies.draw(screen)
         self.power_ups.draw(screen)
+        self.texts.draw(screen)
+        self.help_text.draw_text(screen)
+        screen.blit(self.level_text, (5, 10))
+
+    def restart_level(self):
+        # called when player dies
+        game_control.current_level = game_control.current_level.__class__()
 
     def move_level(self):  # Check if player has reached edge of top screen
 
         if player.rect.top <= 1:   # if player is near top of screen
             self.current_height += 1  # increment place in level
             if self.current_height == self.level_height:
-                print('woo new level')
                 self.new_level()
             else:
                 for platform in self.platforms: # move platforms 'down' or kill if on screen
                     if platform.rect.top > 0:
                         platform.kill()
-                        print(str(platform.alive()))
+                        #print(str(platform.alive()))
                     else:
                         if platform.rect.top <= -1200:
                             platform.rect.top += SCREENHEIGHT * 2
@@ -581,21 +635,19 @@ class Level:
             player.rect.bottom = SCREENHEIGHT
 
     def new_level(self):
-        print('Level complete')
+        #print('Level complete')
         # save game
         with open('save_file.txt', 'w') as savefile:   # access save file
             savefile.write(str(game_control.current_level_no + 1))   # save next level number (so player can start from new level)
 
         for sprite in self.level_sprites:
             sprite.kill()
-            print('good die')
 
         # display text saying level complete
         end_text = basic_font.render('Level ' + str(game_control.current_level_no + 1) + ' complete!', True, WHITE)
         game_screen.blit(end_text, [400, 300])
-        print(str(game_control.current_level_no))
         game_control.current_level_no += 1  # level number + 1
-        print(str(game_control.current_level_no))
+
 
         pygame.mixer.music.fadeout(750)
         game_control.change_level()
@@ -609,6 +661,7 @@ class Level:
             second_rect.height += 20
             self.platform_rects.append(second_rect)
 
+
 class Level_01(Level):
     def __init__(self):
         # Call the parent constructor
@@ -617,22 +670,25 @@ class Level_01(Level):
         self.background = pygame.image.load("assets/background_1.png")
         self.soundtrack = 'assets/music/mono.ogg'
 
+        self.help_text = Help_Text()
+        self.texts.add(self.help_text)
+
+        self.level_text = self.level_font.render('Level 1', 0, WHITE)
+
         # array of platforms to be drawn- width, height, x, y
         # x must be greater than (or equal to) INNERSCREENX and less than 500
         # y must be less than 600 (SCREENHEIGHT) and less than max screen height of level i.e. -1800
-        level_platforms = [[170, 40, 350, 430], [150, 40, INNERSCREENX, 300], [100, 40, INNERSCREENX + 230, 190],
-                 [150, 40, INNERSCREENX + 120, -150],[150, 40, INNERSCREENX + 350, -200],
-                 [150, 30, INNERSCREENX + 100, - 350], [150, 40, INNERSCREENX + 200, -500],
-                 [150, 40, INNERSCREENX + 100, -1350], [150, 40, INNERSCREENX + 350, -1500],
-                 [150, 40, INNERSCREENX + 200, -1650]]
+        level_platforms = [[170, 40, 350, 430], [150, 40, INNERSCREENX, 300], [160, 40, INNERSCREENX + 230, 190],
+                 [150, 40, INNERSCREENX + 120, -150], [150, 40, INNERSCREENX + 200, -200], [150, 30, INNERSCREENX + 100, - 350], [150, 40, INNERSCREENX + 200, -500],
+                 [150, 40, INNERSCREENX + 100, -1350], [150, 40, INNERSCREENX + 350, -1500], [150, 40, INNERSCREENX + 200, -1650]]
 
         # array of enemies to be drawn- type of enemy (file name), x, y, speed
         # x & y should be on a platform or the ground - follow the level_platforms array
-        level_enemies = [['test', 400, 430, 0.0001]]
+        level_enemies = [['test', 400, 430, 0.0001], ['test', 450, 190, 0.0001], ['test', 200, -10, 0.0001]]
 
         # array of power ups to be drawn- 'no' type should be string for file, x, y
         # can be drawn anywhere on screen (but not on top of platforms)
-        level_power_ups = [['powerup1', INNERSCREENX + 100, 600]]
+        level_power_ups = [['powerup2', INNERSCREENX + 100, 250]]
 
         for platform in level_platforms:
             block = Platform(platform[0], platform[1])
@@ -643,6 +699,7 @@ class Level_01(Level):
 
         for enemy in level_enemies:
             entity = Enemy(enemy[0], enemy[1], enemy[2], enemy[3])
+            #print(str(entity.rect.y))
             self.enemies.add(entity)
             self.level_sprites.add(entity)
 
@@ -663,6 +720,10 @@ class Level_02(Level):
 
         self.background = None
         self.soundtrack = 'assets/music/god.ogg'
+        self.help_text = Help_Text()
+        self.texts.add(self.help_text)
+
+        self.level_text = self.level_font.render('Level 2', 0, WHITE)
 
         # array of platforms to be drawn- width, height, x, y
         # x should be greater than (or equal to) INNERSCREENX and less than 500

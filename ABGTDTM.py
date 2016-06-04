@@ -8,7 +8,7 @@ def main():
     save_file = 'save_game.txt'
 
     pygame.display.set_caption('A Beginner\'s guide to destroying the Moon')
-    clock = pygame.time.Clock()
+
 
     pygame.mixer.music.load(game_control.current_level.soundtrack)
     pygame.mixer.music.play(-1)
@@ -70,6 +70,7 @@ def main():
         player.update()
 
         hearts.draw(game_screen)
+        goddess_group.draw(game_screen)
 
         game_control.current_level.update_level()
 
