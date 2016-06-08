@@ -17,13 +17,18 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:  # when user presses up key
-                    game_control.current_level.target_up()
-                elif event.key == pygame.K_DOWN:  # when user presses down key
-                    game_control.current_level.target_down()
-                elif event.key == pygame.K_RETURN:  # when user presses enter key
-                    game_control.current_level.select()
+                if not game_control.current_level.to_help: # if not in help screen - don't want user doing things while viewing it
+                    if event.key == pygame.K_UP:  # when user presses up key
+                        game_control.current_level.target_up()
+                    elif event.key == pygame.K_DOWN:  # when user presses down key
+                        game_control.current_level.target_down()
+                    elif event.key == pygame.K_RETURN:  # when user presses enter key
+                        game_control.current_level.select()
+                else:
+                    if event.key == pygame.K_SPACE:
+                        game_control.current_level.to_help = False
 
         game_control.current_level.target_button()
 
