@@ -410,7 +410,7 @@ class Background(pygame.sprite.Sprite):
         self.image.set_alpha(200)
         self.rect = self.image.get_rect()
 
-        if file == '1':
+        if file != 'main':
             self.rect.x = INNERSCREENX
             self.rect.bottom = SCREENHEIGHT
 
@@ -655,6 +655,7 @@ class Level:
                     else:
                         if platform.rect.top <= -1200:
                             platform.rect.top += SCREENHEIGHT * 2
+                            print(str(platform.rect.x))
                         else:
                             platform.rect.top += SCREENHEIGHT
                 for enem in self.enemies:  # move enemies 'down' or kill if on screen
@@ -808,7 +809,8 @@ class Level_03(Level):
         # Call the parent constructor
         Level.__init__(self)
 
-        self.background = None
+        level_background = Background('2')
+        self.backgrounds.add(level_background)
         self.soundtrack = 'assets/music/star.wav'
         self.help_text = Help_Text()
         self.texts.add(self.help_text)
@@ -834,7 +836,7 @@ class Level_03(Level):
             block = Platform(platform[0], platform[1])
             block.rect.x = platform[2]
             block.rect.y = platform[3]
-            block.image.fill(WHITE)
+            block.image.fill(LLBLUE)
             self.platforms.add(block)
             self.level_sprites.add(block)
 
@@ -847,6 +849,7 @@ class Level_03(Level):
             pu = Power_up(power_up[0], power_up[1], power_up[2])
             self.power_ups.add(pu)
             self.level_sprites.add(pu)
+
 
 
 # create all sprite groups and the player instance

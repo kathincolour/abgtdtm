@@ -1,4 +1,0 @@
-import pygame, constants
-pygame.init()
-courier = pygame.fonts.SysFont('Courier New', 22)
-text = courier.render("Hello!", )
