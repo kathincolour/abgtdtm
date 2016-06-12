@@ -21,4 +21,4 @@ INNERSCREENHEIGHT = SCREENHEIGHT
 inner_screen = pygame.Rect(INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)
 
 
-basic_font = pygame.font.Font(None, 20)
+basic_font = pygame.font.Font(None, 50)
