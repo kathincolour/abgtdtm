@@ -84,6 +84,7 @@ def main():
         # draw below here
         # pygame.draw.rect(game_screen, LBLUE, (INNERSCREENX, 0, INNERSCREENWIDTH, INNERSCREENHEIGHT)) # draw inner screen
         # game_screen.blit(current_level.background,(INNERSCREENX, SCREENHEIGHT))
+
         game_control.current_level.draw(game_screen)
         all_sprites.draw(game_screen)
 

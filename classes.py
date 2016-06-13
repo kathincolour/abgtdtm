@@ -33,7 +33,10 @@ class Game_control:
         self.current_level = None
 
     def change_level(self):
-        self.current_level = self.level_list[self.current_level_no]
+        if self.current_level_no < 4:
+            self.current_level = self.level_list[self.current_level_no]
+        else:
+            pass
 
 
 game_control = Game_control()
@@ -131,8 +134,8 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
 
-        if pygame.time.get_ticks() > game_control.level_list[0].time_load + 20000: # pause player movement for an amount of time after starting game to stop platform rendering bug
-            if pygame.time.get_ticks() > game_control.current_level.load_time + 5000 and game_control.current_level_no == 1:
+        #if pygame.time.get_ticks() > game_control.level_list[0].time_load + 20000: # pause player movement for an amount of time after starting game to stop platform rendering bug
+            #if pygame.time.get_ticks() > game_control.current_level.load_time + 5000 and game_control.current_level_no == 1:
                 if 140 > self.rect.x > 615:
                     self.rect.x = 150
                 # calculate gravity
@@ -651,9 +654,7 @@ class Level:
         self.texts.draw(screen)
         self.help_text.draw_text(screen)
         screen.blit(self.level_text, (5, 10))
-        # draw loading text if needed
-        if pygame.time.get_ticks() < game_control.level_list[0].time_load + 20000 and game_control.current_level_no == 1:
-            screen.blit(self.loading_text, (450, 300))
+
 
     def restart_level(self):
         # called when player dies
@@ -702,16 +703,14 @@ class Level:
     def new_level(self):
         # print('Level complete')
         # save game
-        with open('save_file.txt', 'w') as savefile:  # access save file
-            savefile.write(
-                str(game_control.current_level_no + 1))  # save next level number (so player can start from new level)
+        if game_control.current_level_no < 4:
+            with open('save_file.txt', 'w') as savefile:  # access save file
+                savefile.write(
+                    str(game_control.current_level_no + 1))  # save next level number (so player can start from new level)
 
-        for sprite in self.level_sprites:
-            sprite.kill()
+            for sprite in self.level_sprites:
+                sprite.kill()
 
-        # display text saying level complete
-        end_text = basic_font.render('Level ' + str(game_control.current_level_no + 1) + ' complete!', True, WHITE)
-        game_screen.blit(end_text, [400, 300])
         game_control.current_level_no += 1  # level number + 1
 
         pygame.mixer.music.fadeout(750)
@@ -751,11 +750,11 @@ class Level_01(Level):
 
         # array of enemies to be drawn- type of enemy (file name), x, y, speed
         # x & y should be on a platform or the ground - follow the level_platforms array
-        level_enemies = [['test', 400, 430, 0.0001], ['test', 450, 190, 0.0001], ['test', 600, -10, 0.0001]]
+        level_enemies = [['test', 400, 430, 0.0001], ['test',450, 190, 0.0001]]
 
         # array of power ups to be drawn- 'no' type should be string for file, x, y
         # can be drawn anywhere on screen (but not on top of platforms)
-        level_power_ups = [['powerup1', INNERSCREENX + 100, 250], ['powerup1', 300, -400]]
+        level_power_ups = [['powerup1', INNERSCREENX + 50, 250]]
 
         for platform in level_platforms:
             block = Platform(platform[0], platform[1])
@@ -797,15 +796,15 @@ class Level_02(Level):
         # y should be less than 600 (SCREENHEIGHT) and less than max screen height of level i.e. -1800
         level_platforms = [[155, 50, 170, 490], [190, 50, 420, 370], [100, 45, 215, 270], [160, 40, 420, 135],
                            [100, 50, 550, -150], [100, 50, 145, -125], [150, 50, 290, - 280], [100, 50, 400, -320], [200, 50, 150, - 480],
-                           [100, 50, 360, -750], [90, 50, 180, - 900], [90, 50, 350, - 950], [90, 50, 500, -1050]]
+                           [100, 50, 350, -750], [90, 50, 180, - 900], [90, 50, 350, - 950], [90, 50, 500, -1050]]
 
         # array of enemies to be drawn- type of enemy (file name), x, y, speed
         # x & y should be on a platform or the ground - follow the level_platforms array
-        level_enemies = []
+        level_enemies = [['test', 180, 500, 0.1]]
 
         # array of power ups to be drawn- 'no' type should be string for file, x, y
         # can be drawn anywhere on screen (but not on top of platforms)
-        level_power_ups = []
+        level_power_ups = [['powerup2', 520, 550]]
 
         for platform in level_platforms:
             block = Platform(platform[0], platform[1])
@@ -843,7 +842,7 @@ class Level_03(Level):
         # y should be less than 600 (SCREENHEIGHT) and less than max screen height of level i.e. -1800
         level_platforms = [[155, 50, 170, 490], [190, 50, 420, 370], [100, 45, 215, 270], [160, 40, 420, 135],
                            [100, 50, 550, -150], [100, 50, 145, -125], [150, 50, 290, - 280], [100, 50, 400, -320], [200, 50, 150, - 480],
-                           [100, 50, 360, -750], [90, 50, 180, - 900], [90, 50, 350, - 950], [90, 50, 500, -1050]]
+                           [100, 50, 340, -750], [90, 50, 180, - 900], [90, 50, 350, - 950], [90, 50, 500, -1050]]
 
         # array of enemies to be drawn- type of enemy (file name), x, y, speed
         # x & y should be on a platform or the ground - follow the level_platforms array
@@ -877,7 +876,7 @@ class Level_03(Level):
 all_sprites = pygame.sprite.Group()
 all_static_sprites = pygame.sprite.Group()  # Sprites that don't move (walls and platforms)
 active_sprites = pygame.sprite.Group()  # group for the player
-player = Player(500, (SCREENHEIGHT + 10))
+player = Player(INNERSCREENX + 200, (SCREENHEIGHT + 10))
 all_sprites.add(player)
 active_sprites.add(player)
 wall_list = pygame.sprite.Group()
