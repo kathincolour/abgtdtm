@@ -131,7 +131,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
 
-        if pygame.time.get_ticks() > game_control.level_list[0].time_load + 17000: # pause player movement for an amount of time after starting game to stop platform rendering bug
+        if pygame.time.get_ticks() > game_control.level_list[0].time_load + 20000: # pause player movement for an amount of time after starting game to stop platform rendering bug
             if pygame.time.get_ticks() > game_control.current_level.load_time + 5000 and game_control.current_level_no == 1:
                 if 140 > self.rect.x > 615:
                     self.rect.x = 150
@@ -652,7 +652,7 @@ class Level:
         self.help_text.draw_text(screen)
         screen.blit(self.level_text, (5, 10))
         # draw loading text if needed
-        if pygame.time.get_ticks() < game_control.level_list[0].time_load + 17000 and game_control.current_level_no == 1:
+        if pygame.time.get_ticks() < game_control.level_list[0].time_load + 20000 and game_control.current_level_no == 1:
             screen.blit(self.loading_text, (450, 300))
 
     def restart_level(self):
