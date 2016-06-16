@@ -500,6 +500,8 @@ class Main_menu:
 
         self.plain_font = pygame.font.Font(None, 30)
         self.howto_text = self.plain_font.render('Use the up/down arrow keys, and the enter key to select', 0, WHITE)
+        self.warning_text1 = self.plain_font.render('This will erase the', 0, WHITE)
+        self.warning_text2 = self.plain_font.render('existing save', 0, WHITE)
 
         self.selector = Selector((520, 250))
         self.selectors.add(self.selector)
@@ -546,6 +548,10 @@ class Main_menu:
             screen.blit(self.text5_2, (100, 270))
             screen.blit(self.text6, (100, 300))
             screen.blit(self.text7, (100, 340))
+
+        if self.target == 0:
+            screen.blit(self.warning_text1, (550, 230))
+            screen.blit(self.warning_text2, (560, 250))
 
     def target_button(self):
         if self.target <= 4 or self.target >= 0:
@@ -594,10 +600,16 @@ class Main_menu:
 
     def continue_game(self):
         if os.path.getsize('save_file.txt') > 0:  # if save file is not empty (could throw exception otherwise)
-            with open('save_file.txt', 'r') as file:
-                game_control.current_level_no = int(file.read())
+            print('true')
+            with open('save_file.txt', 'r+') as file:
+                if int(file.readline()) <= len(game_control.level_list):   #if saved level number is greater than number of levels
+                    game_control.current_level_no = int(file.read())
+                else:
+                    open('save_file.txt', 'w').close()
+                    game_control.current_level_no = 1
+
         else:
-            # print('yes')
+            print('no')
             game_control.current_level_no = 1
         game_control.done = True
 
@@ -655,7 +667,6 @@ class Level:
         self.help_text.draw_text(screen)
         screen.blit(self.level_text, (5, 10))
 
-
     def restart_level(self):
         # called when player dies
         game_control.current_level = game_control.current_level.__class__()
@@ -664,14 +675,14 @@ class Level:
 
         if player.rect.top <= 1:  # if player is near top of screen
             self.current_height += 1  # increment place in level
-            if self.current_height == self.level_height:
+            if self.current_height == self.level_height:    # if player has reached maximum level height go to next level
                 self.new_level()
             else:
                 for platform in self.platforms:  # move platforms 'down' or kill if on screen
                     if platform.rect.top > 0:
                         platform.kill()
                         # print(str(platform.alive()))
-                    else:
+                    else:   # move power up down by one screen length if two screen lengths away
                         if platform.rect.top <= -1200:
                             platform.rect.top += SCREENHEIGHT * 2
                             print(str(platform.rect.x))
@@ -681,18 +692,20 @@ class Level:
                 for enem in self.enemies:  # move enemies 'down' or kill if on screen
                     if enem.rect.top > 0:
                         enem.kill()
-                    else:
+                    else:    # move power up down by one screen length if two screen lengths away
                         if enem.rect.top <= -1200:
                             enem.rect.top += SCREENHEIGHT * 2
                         else:
                             enem.rect.top += SCREENHEIGHT
 
-                for pu in self.power_ups:
+                for pu in self.power_ups:   # move power-ups down or kill if on screen
                     if pu.rect.top > 0:
                         pu.kill()
                     else:
-                        if pu.rect.top <= -1200:
+                        if pu.rect.top <= -1200: # move power up down by one screen length if two screen lengths away
                             platform.rect.top += SCREENHEIGHT * 2
+                            print(pu)
+                            print('yes')
                         else:
                             platform.rect.top += SCREENHEIGHT
 
@@ -750,11 +763,11 @@ class Level_01(Level):
 
         # array of enemies to be drawn- type of enemy (file name), x, y, speed
         # x & y should be on a platform or the ground - follow the level_platforms array
-        level_enemies = [['test', 400, 430, 0.0001], ['test',450, 190, 0.0001]]
+        level_enemies = [['test', 400, 430, 0.0001], ['test',450, 190, 0.0001], ['t', 170, -160, 1]]
 
         # array of power ups to be drawn- 'no' type should be string for file, x, y
         # can be drawn anywhere on screen (but not on top of platforms)
-        level_power_ups = [['powerup1', INNERSCREENX + 50, 250]]
+        level_power_ups = [['powerup1', INNERSCREENX + 50, 250], ['powerup2', 300, -250]]
 
         for platform in level_platforms:
             block = Platform(platform[0], platform[1])
